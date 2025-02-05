@@ -199,17 +199,20 @@ class DatabaseManager:
             print(f"Peer with name {Name} already exists")
             return
 
-        database["peers"][Name] = {}
+        peercfg = {}
 
         # if private key is not specified, generate one
         if locals().get("PrivateKey") is None:
-            privatekey = self.wireguard.genkey()
-            database["peers"][Name]["PrivateKey"] = privatekey
-
+            peercfg["PrivateKey"] = self.wireguard.genkey()
+        
         for key in ALL_ATTRIBUTES:
             if locals().get(key) is not None:
-                database["peers"][Name][key] = locals().get(key)
+                peercfg[key] = locals().get(key)
 
+        if Endpoint is None:
+            peercfg["ListenPort"] = None
+
+        database["peers"][Name] = peercfg
         self.write_database(database)
 
     def updatepeer(
@@ -343,8 +346,7 @@ class DatabaseManager:
             local_peer = database["peers"][peer]
 
             with (output / f"{peer}.conf").open("w") as config:
-                config.write("[Interface]\n")
-                config.write("# Name: {}\n".format(peer))
+                config.write("[Interface] # {}\n".format(peer))
                 config.write("Address = {}\n".format(", ".join(local_peer["Address"])))
                 config.write("PrivateKey = {}\n".format(local_peer["PrivateKey"]))
 
@@ -356,8 +358,7 @@ class DatabaseManager:
                 for p in [i for i in database["peers"] if i != peer]:
                     remote_peer = database["peers"][p]
 
-                    config.write("\n[Peer]\n")
-                    config.write("# Name: {}\n".format(p))
+                    config.write("\n[Peer] # {}\n".format(p))
                     config.write(
                         "PublicKey = {}\n".format(
                             self.wireguard.pubkey(remote_peer["PrivateKey"])
