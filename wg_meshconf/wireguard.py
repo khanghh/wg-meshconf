@@ -11,6 +11,7 @@ The WireGuard class implements some of wireguard-tools' cryptographic
 """
 
 import base64
+import hashlib
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
@@ -59,14 +60,8 @@ class WireGuard:
         ).decode()
 
     @staticmethod
-    def genpsk() -> str:
-        """generate a WireGuard PSK
-
-        This is an alias of WireGuard.genkey since they both
-            produce a random sequence of bytes. This generated
-            X25519 private key can also be used as a symmetric key.
-
-        Returns:
-            str: generated PSK encoded as a base64 string
-        """
-        return WireGuard.genkey()
+    def genpsk(peer1: str, peer2: str, salt: str = "") -> str:
+        peers = sorted([peer1, peer2])
+        psk = hashlib.sha256(f"{salt}:{peers[0]}:{peers[1]}".encode()).digest()
+        psk_str = base64.b64encode(psk).decode()
+        return psk_str

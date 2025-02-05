@@ -317,7 +317,7 @@ class DatabaseManager:
         # print the constructed table in console
         Console().print(table)
 
-    def genconfig(self, Name: str, output: pathlib.Path):
+    def genconfig(self, Name: str, output: pathlib.Path, skip_psk: bool, psk_salt: str):
         database = self.read_database()
 
         # check if peer ID is specified
@@ -363,6 +363,14 @@ class DatabaseManager:
                             self.wireguard.pubkey(remote_peer["PrivateKey"])
                         )
                     )
+
+                    # generate preshared key with other peers
+                    if not skip_psk:
+                        config.write(
+                            "PresharedKey = {}\n".format(
+                                self.wireguard.genpsk(p, peer, psk_salt)
+                            )
+                        )
 
                     if remote_peer.get("Endpoint") is not None:
                         config.write(

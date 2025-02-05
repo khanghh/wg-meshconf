@@ -129,6 +129,18 @@ def parse_arguments():
         type=pathlib.Path,
         default=pathlib.Path.cwd() / "output",
     )
+    genconfig.add_argument(
+        "-s",
+        "--psksalt",
+        help="preshared keys salt",
+        default=""
+    )
+    genconfig.add_argument(
+        "-n",
+        "--nopsk",
+        help="do not generate preshared keys",
+        action="store_true"
+    )
 
     return parser.parse_args()
 
@@ -190,7 +202,7 @@ def main():
         database_manager.showpeers(args.name, args.verbose)
 
     elif args.command == "genconfig":
-        database_manager.genconfig(args.name, args.output)
+        database_manager.genconfig(args.name, args.output, args.nopsk, args.psksalt)
 
     # if no commands are specified
     else:
